@@ -2,9 +2,15 @@
 
 require "templets/header.php";
 
+ if (!isset($_POST['hid']) || $_POST['hid'] !='1') {
+   
+    $captcha_generator = md5( rand());   
+    $_SESSION['captcha'] = substr($captcha_generator , 0 , 6);
+  }
+
 //$emptyfields= $invaliduid= $invalidmail=$passwordCheck=$usertaken='';
 
-$errors=array('emptyfields'=>'', 'invaliduid'=>'', 'invalidmail'=>'', 'passwordCheck'=>'', 'usertaken'=>'', 'invalidfname'=>'', 'invalidlname'=>'', 'invaliddob'=>'', 'invalidmobile'=>'', 'invalidage'=>'', 'invalidedu'=>'', 'gender'=>'', 'invalidaddress'=>'', 'imagerequire'=>'');
+$errors=array('emptyfields'=>'', 'invaliduid'=>'', 'invalidmail'=>'', 'passwordCheck'=>'', 'usertaken'=>'', 'invalidfname'=>'', 'invalidlname'=>'', 'invaliddob'=>'', 'invalidmobile'=>'', 'invalidage'=>'', 'invalidedu'=>'', 'gender'=>'', 'invalidaddress'=>'',  'captcha'=>'', 'term'=>'');
 
 
 if (isset($_GET['error'])) {
@@ -42,20 +48,36 @@ if (isset($_GET['error'])) {
  				elseif ($_GET['error']=="invalidedu") {
  					$errors['invalidedu']="<p>invalid education</p>";
  				}
- 				elseif ($_GET['error']=="gender") {
+ 				elseif ($_GET['error']=="invalidgender") {
  					$errors['gender']="<p>invalid gender</p>";
  				}
  				elseif ($_GET['error']=="invalidaddress") {
  					$errors['invalidaddress']="<p>invalid address</p>";
  				}
- 				elseif ($_GET['error']=="imagerequire") {
- 					$errors['imagerequire']="<p>please select image</p>";
- 				}
+ 				// elseif ($_GET['error']=="invalidsiz") {
+ 				// 	$errors['imagerequire']="<p>file size is too big</p>";
+ 				// }
+     //    elseif ($_GET['error']=="invalidimg") {
+     //      $errors['imagerequire']="<p>there was an error uploading your file</p>";
+     //    }
+     //    elseif ($_GET['error']=="invalidtype") {
+     //      $errors['imagerequire']="<p>you can not upload file of this type</p>";
+     //    }
+         elseif ($_GET['error']=="invlidcaptcha") {
+           $errors['captcha']="<p>Captcha does not match</p>";
+           
+          }
+         elseif ($_GET['error']=="invlidterm") {
+          $errors['term']="<p>kindly accept the terms and conditions</p>";
+           
+          }
+           elseif($_GET['error']=="success") {
+      echo "<p>signup is successful</p>";       
+    }
+ 
  			}
 
-     elseif($_GET['signup']=="success") {
- 			echo "<p>signup is successful</p>"; 			
- 		}
+    
 
  ?>
 
@@ -65,7 +87,7 @@ if (isset($_GET['error'])) {
  		<section>
  			<h3 class="center brand-text">signup</h3>
  			
- 			<form action="includes/signup.inc.php" method="post" id="myForm" name = "myForm" onsubmit = "return validate()">
+ 			<form class="white" action="includes/signup.inc.php" method="post" id="myForm" name = "myForm" onsubmit = "return validate()" enctype="multipart/form-data">
  				
  				<div class="red-text"><?php if(isset($errors['emptyfields'])){echo $errors['emptyfields']; }?></div>
 
@@ -82,11 +104,11 @@ if (isset($_GET['error'])) {
 
 
  				<label for="username">your user name:</label>
- 				<input type="text" id="uid" name="uid" placeholder="username" value="<?php echo htmlspecialchars($_COOKIE['username']??''); ?>">
+ 				<input type="text" id="uid" name="uid" placeholder="username">
  				<div class="red-text"><?php if (isset($errors['invaliduid'])){echo $errors['invaliduid'];} elseif (isset($errors['usertaken'])){echo $errors['usertaken'];}?></div>
  				
  				<label for="email">your email:</label>
- 				<input type="email" id="mail" name="mail" placeholder="e-mail" value="<?php echo htmlspecialchars($_COOKIE['mail']??''); ?>">
+ 				<input type="email" id="mail" name="mail" placeholder="e-mail" >
  				<div class="red-text"><?php echo $errors['invalidmail']; ?></div>
  				
  				<div>
@@ -114,7 +136,7 @@ if (isset($_GET['error'])) {
  				  <select class="browser-default" name="edu" id="edu">
  				  	<option value="" disabled selected>Choose your education</option>
  					 <option value="high school">high school</option>
- 					 <option value="10+2">10+2</option>
+ 					 <option value="intermidiate">10+2</option>
   					 <option value="graduate">graduate</option>
  					 <option value="post graduate">post graduate</option>
 					</select>
@@ -129,14 +151,14 @@ if (isset($_GET['error'])) {
 						 <p>
 						 	<label>select your gender</label><br>
      					 <label>
-      					  <input name="gender" type="radio" id="gender" />
+      					  <input name="gender" value="male" type="radio" id="gender" />
       					  <span>Male</span>
       						</label>
    						 </p>
 
     					 <p>
      					 <label>
-      					  <input name="gender" type="radio" id="gender" />
+      					  <input name="gender" value="female" type="radio" id="gender" />
       					  <span>Female</span>
      					 </label>
    						 </p>
@@ -144,7 +166,7 @@ if (isset($_GET['error'])) {
 
 						 <p>
     					  <label>
-     					   <input name="gender" type="radio"  id="gender"/>
+     					   <input name="gender" value="other" type="radio"  id="gender"/>
       					 <span>Other</span>
     					  </label>
    						 </p>		
@@ -178,27 +200,32 @@ if (isset($_GET['error'])) {
  				
   					
 
- 					<br>
+ 					<!-- <br>
 
   					<div>
-  					<label for="photo">select your photo:</label>
-  					<input type="file" name="photo" accept="image/*" id="photo"></div>
-  					<div class="red-text"><?php echo $errors['imagerequire']; ?></div>
+  					<label for="photo">select your photo(jpg, jpeg, png):</label>
+  					<input type="file" name="photo" accept="application/jpg" id="photo"></div>
+  					<div class="red-text"><?php echo $errors['imagerequire']; ?></div> 
   					<br>
-  					<p>
-  						<label>
-  							<input type="checkbox" name="term" id="term">
-  							<span> I agree</span>
-  						</label>
-  					</p>
   					
-  					<br>
-  						 <br>
+  						 <br> -->
             <p>enter captcha</p>
-            <p><img src="captcha.php" width="120" height="40" border="1" alt="CAPTCHA"></p>
-            <p><input class="input_data" type="text"  name="captcha" id="captcha"><br>
+            <p><?php echo $_SESSION['captcha'];?></p>
+            <input type="hidden" name="hid" value="1">
+            <p><input class="input_data" type="captcha"  name="captcha" id="captcha" placeholder="Enter captcha text"><br>
+              <div class="red-text"><?php echo $errors['captcha'];?></div>
             <br>
 
+
+            <p>
+              <label>
+                <input type="checkbox" name="term" id="term" value="1">
+                <span> I agree</span>
+              </label>
+              <div class="red-text"><?php echo $errors['term'];?></div>
+            </p>
+            
+            <br>
  				<button type="submit" name="signup-submit">signup</button>
  			</form>
 
@@ -311,6 +338,7 @@ if (isset($_GET['error'])) {
             document.myForm.captcha.focus() ;
             return false;
          }
+         
          // if( document.myForm.Zip.value == "" || isNaN( document.myForm.Zip.value ) ||
          //    document.myForm.Zip.value.length != 5 ) {
             
@@ -328,18 +356,18 @@ if (isset($_GET['error'])) {
 
 
 
-   function validateEmail() {
-         var emailID = document.myForm.mail.val();
-         atpos = emailID.indexOf("@");
-         dotpos = emailID.lastIndexOf(".");
+   // function validateEmail() {
+   //       var emailID = document.myForm.mail.val();
+   //       atpos = emailID.indexOf("@");
+   //       dotpos = emailID.lastIndexOf(".");
          
-         if (atpos < 1 || ( dotpos - atpos < 2 )) {
-            alert("Please enter correct email ID")
-            document.myForm.mail.focus() ;
-            return false;
-         }
-         return( true );
-      }
+   //       if (atpos < 1 || ( dotpos - atpos < 2 )) {
+   //          alert("Please enter correct email ID")
+   //          document.myForm.mail.focus() ;
+   //          return false;
+   //       }
+   //       return( true );
+   //    }
 </script>
 
 </main>

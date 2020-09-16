@@ -42,9 +42,25 @@
 		<div class="container">
 			<a href="index.php" class="center brand-logo brand-text">ninja pizza</a>
 			<ul id="nav-mobile" class="right hide-on-small-and-down">
-			<li><a href="add.php" class="btn brand z-depth-0">add a pizza</a></li>
-            <li><a href="../signup.php" class="btn brand z-depth-0">sign up</a></li></ul>
-             <li><a href="../signin.php" class="btn brand z-depth-0">sign in</a></li></ul>
+			
+           
+            <?php 
+
+            if (isset($_SESSION['user'])) {
+
+                echo '<li><span class="brand-text">hello '.$_SESSION['user'].'</span></li>';
+                echo '<li><a href="includes/logout.inc.php" class="btn brand z-depth-0">log out</a></li>';
+              echo '<li><a href="add.php" class="btn brand z-depth-0">add a pizza</a></li>';
+                
+            }else{
+                echo '<li><span class="brand-text">hello guest</span></li>';
+                echo '<li><a href="signup.php" class="btn brand z-depth-0">sign up</a></li>
+             <li><a href="signin.php" class="btn brand z-depth-0">sign in</a></li>';
+            }
+             ?>
+            
+
+</ul>
 		</div>
 
         
